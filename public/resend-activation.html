@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gửi lại liên kết kích hoạt</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="auth-card">
+      <h1>Gửi lại liên kết</h1>
+      <p class="lead">Nhập email đã đăng ký để nhận liên kết kích hoạt mới.</p>
+      <form id="resend-form" class="auth-form">
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" maxlength="320" autocomplete="email" required>
+        </div>
+        <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+        <button id="submit-button" type="submit">Gửi liên kết</button>
+      </form>
+      <p class="footer"><a href="/">Quay lại đăng ký</a></p>
+    </main>
+
+    <script>
+      const form = document.getElementById('resend-form');
+      const message = document.getElementById('message');
+      const button = document.getElementById('submit-button');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        message.hidden = true;
+        button.disabled = true;
+
+        try {
+          const response = await fetch('/api/auth/resend-activation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: form.email.value.trim() }),
+          });
+          const result = await response.json().catch(() => ({}));
+          message.textContent = result.message || 'Không thể xử lý yêu cầu.';
+          message.className = `message ${response.ok ? 'success' : 'error'}`;
+          message.hidden = false;
+        } catch {
+          message.textContent = 'Không thể kết nối máy chủ. Vui lòng thử lại.';
+          message.className = 'message error';
+          message.hidden = false;
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

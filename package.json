@@ -1,10 +1,11 @@
 {
   "name": "ban-ve-su-kien",
   "version": "1.0.0",
-  "description": "",
+  "description": "API bán vé sự kiện",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Chưa có bài test nào\" && exit 0",
+    "start": "node index.js",
+    "test": "node --test --test-isolation=none",
     "migrate:latest": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback"
   },
@@ -13,9 +14,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "dotenv": "^18.0.3",
     "express": "^5.2.1",
     "knex": "^3.3.0",
+    "nodemailer": "^10.0.10",
     "pg": "^8.23.0"
   }
 }

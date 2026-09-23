@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng ký tài khoản</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="auth-card">
+      <h1>Đăng ký</h1>
+      <p class="lead">Tạo tài khoản người mua để đặt vé sự kiện.</p>
+
+      <form id="register-form" class="auth-form">
+        <div class="field-group">
+          <label for="fullName">Họ tên</label>
+          <input id="fullName" name="fullName" type="text" minlength="2" maxlength="150" autocomplete="name" required>
+        </div>
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" maxlength="320" autocomplete="email" required>
+        </div>
+        <div class="field-group">
+          <label for="password">Mật khẩu</label>
+          <input id="password" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+          <span class="hint">Từ 8 đến 128 ký tự.</span>
+        </div>
+        <div class="field-group">
+          <label for="confirmPassword">Nhập lại mật khẩu</label>
+          <input id="confirmPassword" name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+        </div>
+        <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+        <button id="submit-button" type="submit">Đăng ký</button>
+      </form>
+
+      <p class="footer"><a href="/resend-activation.html">Gửi lại liên kết kích hoạt</a></p>
+    </main>
+
+    <script>
+      const form = document.getElementById('register-form');
+      const message = document.getElementById('message');
+      const button = document.getElementById('submit-button');
+
+      function showMessage(text, type) {
+        message.textContent = text;
+        message.className = `message ${type}`;
+        message.hidden = false;
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const password = form.password.value;
+
+        if (password.length < 8) {
+          showMessage('Mật khẩu phải có ít nhất 8 ký tự.', 'error');
+          return;
+        }
+
+        if (password !== form.confirmPassword.value) {
+          showMessage('Mật khẩu nhập lại không khớp.', 'error');
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = 'Đang xử lý...';
+
+        try {
+          const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fullName: form.fullName.value.trim(),
+              email: form.email.value.trim(),
+              password,
+            }),
+          });
+          const result = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(result.message || 'Không thể đăng ký. Vui lòng thử lại.');
+          }
+
+          showMessage(result.message, 'success');
+          form.reset();
+        } catch (error) {
+          showMessage(error.message || 'Không thể đăng ký. Vui lòng thử lại.', 'error');
+        } finally {
+          button.disabled = false;
+          button.textContent = 'Đăng ký';
+        }
+      });
+    </script>
+  </body>
+</html>
