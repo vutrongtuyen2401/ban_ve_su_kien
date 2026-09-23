@@ -1,0 +1,40 @@
+services:
+  proxy:
+    image: caddy:2-alpine
+    container_name: ban-ve-proxy
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./deploy:/etc/caddy:ro
+    networks: [ban-ve]
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: ban-ve-db
+    env_file: .env.staging
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [ban-ve]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: ban-ve-redis
+    volumes:
+      - redis_data:/data
+    networks: [ban-ve]
+    restart: unless-stopped
+
+networks:
+  ban-ve:
+    name: ban-ve-network
+
+volumes:
+  postgres_data:
+  redis_data:

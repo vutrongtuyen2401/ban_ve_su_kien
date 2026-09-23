@@ -1,42 +1,20 @@
 require('dotenv').config();
-    const express = require('express');
-    const db = require('./db');
 
-    const app = express();
-    const port = process.env.PORT || 8090;
+const db = require('./db');
+const { createApp } = require('./app');
 
-    // Middleware để đọc dữ liệu dạng JSON từ client gửi lên
-    app.use(express.json());
+const port = Number(process.env.PORT || 8090);
+const server = createApp(db).listen(port, () => {
+  console.log(`Server API đang chạy tại cổng ${port}`);
+});
 
-    // API 1: Lấy danh sách sự kiện
-    app.get('/api/events', async (req, res) => {
-      try {
-        const events = await db('events').select('*');
-        res.status(200).json({ success: true, data: events });
-      } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-      }
-    });
+async function shutdown(signal) {
+  console.log(`Nhận ${signal}, đang dừng server...`);
+  server.close(async () => {
+    await db.destroy();
+    process.exit(0);
+  });
+}
 
-    // API 2: Thêm mới một sự kiện
-    app.post('/api/events', async (req, res) => {
-      try {
-        const { title, description, price, total_tickets } = req.body;
-        const [newEvent] = await db('events')
-          .insert({ title, description, price, total_tickets })
-          .returning('*');
-        res.status(201).json({ success: true, data: newEvent });
-      } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-      }
-    });
-
-    app.listen(port, async () => {
-      console.log(`Server API đang chạy tại http://localhost:${port}`);
-      try {
-        await db.raw('SELECT 1');
-        console.log('✅ Đã kết nối PostgreSQL thành công!');
-      } catch (err) {
-        console.error('❌ Lỗi kết nối PostgreSQL:', err.message);
-      }
-    });
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

@@ -1,0 +1,4 @@
+:8090 {
+  reverse_proxy api-blue:8090
+}
+

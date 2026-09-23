@@ -2,52 +2,138 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  migration:
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: mysecretpassword
+          POSTGRES_PASSWORD: ci-only-password
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 5s
           --health-timeout 5s
           --health-retries 5
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: Install dependencies
-        run: |
-          npm install
-          chmod -R +x node_modules/.bin
-
-
-      - name: Run lint and test
-        run: |
-          npm run lint --if-present
-          npm test --if-present
-
-      - name: Run migrations
+          cache: npm
+      - run: npm ci
+      - name: Verify migrations up and down
         env:
-          DB_CONNECTION_STRING: postgres://postgres:mysecretpassword@localhost:5432/postgres
+          DB_CONNECTION_STRING: postgres://postgres:ci-only-password@localhost:5432/postgres
         run: |
           npm run migrate:latest
           npm run migrate:rollback
+          npm run migrate:latest
+
+  image:
+    if: github.event_name == 'push'
+    needs: [build, lint, test, migration]
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set image name
+        id: meta
+        shell: bash
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.image }}
+
+  deploy-staging:
+    if: github.event_name == 'push' && vars.STAGING_ENABLED == 'true'
+    needs: image
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$STAGING_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$STAGING_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Copy deployment files
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_USER: ${{ secrets.STAGING_USER }}
+        run: |
+          ssh "$STAGING_USER@$STAGING_HOST" 'mkdir -p ~/ban-ve-su-kien/deploy'
+          scp compose.staging.yml "$STAGING_USER@$STAGING_HOST:~/ban-ve-su-kien/"
+          scp deploy/deploy.sh "$STAGING_USER@$STAGING_HOST:~/ban-ve-su-kien/deploy/"
+      - name: Deploy healthy image with blue-green switch
+        env:
+          IMAGE: ${{ needs.image.outputs.image }}
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_USER: ${{ secrets.STAGING_USER }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | ssh "$STAGING_USER@$STAGING_HOST" "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
+          ssh "$STAGING_USER@$STAGING_HOST" "cd ~/ban-ve-su-kien && chmod +x deploy/deploy.sh && IMAGE='$IMAGE' ./deploy/deploy.sh"
+      - name: Verify public staging endpoint
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+        run: curl --fail --retry 10 --retry-delay 3 "$STAGING_URL/health/ready"
