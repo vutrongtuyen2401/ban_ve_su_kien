@@ -1,0 +1,21 @@
+{
+  "name": "task-t05-login",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Đăng nhập bằng email và mật khẩu cho T-05",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "argon2": "^0.41.1",
+    "dotenv": "^18.0.3",
+    "express": "^5.2.1",
+    "knex": "^3.3.0",
+    "pg": "^8.23.0",
+    "redis": "^4.7.0"
+  }
+}
