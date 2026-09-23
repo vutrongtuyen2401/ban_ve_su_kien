@@ -43,8 +43,8 @@ jobs:
           npm test --if-present
 
       - name: Kiểm tra Migration tiến và lùi
-        env:
-          DB_CONNECTION_STRING: postgres://postgres:mysecretpassword@localhost:5432/postgres
-        run: |
-          npx knex migrate:latest
-          npx knex migrate:rollback
+            env:
+              DB_CONNECTION_STRING: postgres://postgres:mysecretpassword@localhost:5432/postgres
+            run: |
+              npm run migrate:latest
+              npm run migrate:rollback

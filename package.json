@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "test": "echo \"Chưa có bài test nào\" && exit 0"
+    "test": "echo \"Chưa có bài test nào\" && exit 0",
+    "migrate:latest": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback"
   },
   "keywords": [],
   "author": "",
