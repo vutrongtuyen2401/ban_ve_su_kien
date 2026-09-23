@@ -1,12 +1,16 @@
 require('dotenv').config();
     const express = require('express');
     const db = require('./db');
+    const { enforceRoutePermissions } = require('./middleware/routeRegistry');
 
     const app = express();
     const port = process.env.PORT || 8090;
 
     // Middleware để đọc dữ liệu dạng JSON từ client gửi lên
     app.use(express.json());
+    
+    // Middleware kiểm tra quyền truy cập theo vai trò (deny-by-default)
+    app.use(enforceRoutePermissions);
 
     // API 1: Lấy danh sách sự kiện
     app.get('/api/events', async (req, res) => {
