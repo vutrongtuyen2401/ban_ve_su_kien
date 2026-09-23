@@ -17,6 +17,7 @@ function createFixture() {
     id: 1,
     email: 'demo@example.com',
     passwordHash: 'hashed-password',
+    isActive: true,
     role: 'buyer',
   };
 
@@ -90,6 +91,47 @@ test('email không tồn tại và mật khẩu sai trả cùng một thông bá
   assert.equal(wrongPassword.status, 401);
   assert.equal(missingUser.body.message, GENERIC_LOGIN_ERROR);
   assert.equal(wrongPassword.body.message, GENERIC_LOGIN_ERROR);
+});
+
+test('tài khoản không hoạt động bị từ chối bằng thông báo chung', async () => {
+  const { state } = createFixture();
+
+  // Tạo fixture riêng để mô phỏng đúng dữ liệu is_active=false từ T-04.
+  const inactiveService = createAuthService({
+    userRepository: {
+      async findByEmail() {
+        return {
+          id: 2,
+          email: 'inactive@example.com',
+          passwordHash: 'hashed-password',
+          isActive: false,
+          role: 'buyer',
+        };
+      },
+    },
+    attemptStore: {
+      async getRemainingLockSeconds() { return 0; },
+      async recordFailure() { return 1; },
+      async clear() {},
+    },
+    sessionStore: {
+      async create(data) {
+        state.sessions.push(data);
+        return { token: 'should-not-exist', ttlSeconds: 28800 };
+      },
+    },
+    verifyPassword: async () => true,
+    dummyPasswordHash: 'dummy-hash',
+  });
+
+  const result = await inactiveService.login({
+    email: 'inactive@example.com',
+    password: 'Demo@1234',
+  });
+
+  assert.equal(result.status, 401);
+  assert.equal(result.body.message, GENERIC_LOGIN_ERROR);
+  assert.equal(state.sessions.length, 0);
 });
 
 test('sau 5 lần sai, lần thứ 6 bị khóa 15 phút', async () => {

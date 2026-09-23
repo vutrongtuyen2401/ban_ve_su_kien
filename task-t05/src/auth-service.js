@@ -57,7 +57,7 @@ function createAuthService({
       passwordMatches = false;
     }
 
-    if (!user || !passwordMatches) {
+    if (!user || !passwordMatches || user.isActive === false) {
       await attemptStore.recordFailure(key);
       return {
         status: 401,

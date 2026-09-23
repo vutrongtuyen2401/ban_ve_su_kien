@@ -9,6 +9,7 @@ function createUserRepository(db) {
           'u.id',
           'u.email',
           'u.password_hash as passwordHash',
+          'u.is_active as isActive',
           'r.name as role',
         )
         .first();
