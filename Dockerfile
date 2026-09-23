@@ -1,18 +1,17 @@
 FROM node:18-alpine
 
-ENV NODE_ENV=production
+# Tạo thư mục làm việc trong container
 WORKDIR /app
 
+# Cài đặt thư viện trước (giúp tối ưu cache)
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install
 
-COPY --chown=node:node app.js db.js index.js knexfile.js ./
-COPY --chown=node:node migrations ./migrations
+# Copy toàn bộ mã nguồn vào
+COPY . .
 
-USER node
+# Mở cổng 8090
 EXPOSE 8090
 
-HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \
-  CMD wget -qO- http://127.0.0.1:8090/health/ready || exit 1
-
+# Khởi động ứng dụng
 CMD ["node", "index.js"]

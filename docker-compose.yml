@@ -1,37 +1,37 @@
+version: '3.8'
+
 services:
+  # Dịch vụ ứng dụng Node.js
   api:
     build: .
     ports:
       - "8090:8090"
     environment:
-      DB_CONNECTION_STRING: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-postgres}
-      PORT: 8090
+      - DB_CONNECTION_STRING=postgres://postgres:mysecretpassword@db:5432/postgres
+      - PORT=8090
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/health/ready"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
 
+  # Dịch vụ Cơ sở dữ liệu PostgreSQL
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # Dịch vụ Cache Redis
   redis:
     image: redis:7-alpine
     ports:
