@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Chưa có bài test nào\" && exit 0",
+    "test": "node --test --test-isolation=none",
     "migrate:latest": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "seed:run": "knex seed:run",
@@ -19,6 +19,7 @@
     "dotenv": "^18.0.3",
     "express": "^5.2.1",
     "knex": "^3.3.0",
+    "nodemailer": "^7.0.13",
     "pg": "^8.23.0"
   }
 }
