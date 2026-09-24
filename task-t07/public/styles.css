@@ -420,7 +420,7 @@ body {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .field-group {
@@ -542,7 +542,7 @@ button.toggle-password-btn:active {
 }
 
 .form-group-item {
-  margin-bottom: 8px !important;
+  margin-bottom: 0 !important;
 }
 
 .alert-success-custom {
@@ -584,16 +584,28 @@ input:-webkit-autofill:active {
 }
 
 .field-feedback {
+  display: block;
   min-height: 18px;
-  font-size: 0.76rem;
-  color: var(--error-text);
+  margin-top: 6px;
+  margin-bottom: 2px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(254, 226, 226, 0.7);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #b91c1c;
   opacity: 0;
+  max-height: 0;
+  overflow: hidden;
   transform: translateY(-4px);
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .field-feedback.show {
   opacity: 1;
+  max-height: 48px;
   transform: translateY(0);
 }
 
@@ -706,24 +718,10 @@ input:-webkit-autofill:active {
   stroke-width: 1.8;
 }
 
-.field-feedback {
-  min-height: 18px;
-  font-size: 0.76rem;
-  color: var(--error-text);
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: 0.2s ease;
-}
-
-.field-feedback.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .btn-submit-register {
   width: 100%;
   height: 42px;
-  margin-top: 10px !important;
+  margin-top: auto;
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #ffffff;
   font-weight: 700;
@@ -735,6 +733,8 @@ input:-webkit-autofill:active {
   transition:
     transform 0.2s,
     box-shadow 0.2s;
+  position: sticky;
+  bottom: 0;
 }
 
 .btn-submit-register:hover {
@@ -807,6 +807,7 @@ input:-webkit-autofill:active {
 }
 
 .message.error {
+  display: none !important;
   background: var(--error-bg);
   color: var(--error-text);
 }

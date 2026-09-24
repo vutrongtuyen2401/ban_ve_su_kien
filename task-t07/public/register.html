@@ -411,6 +411,10 @@
         },
       };
 
+      function clearFieldErrors() {
+        fieldNames.forEach((fieldName) => setFieldState(fieldName, ""));
+      }
+
       function setFieldState(fieldName, message = "") {
         const input = document.getElementById(fieldName);
         const fieldWrap = input?.closest(".custom-input-group");
@@ -423,23 +427,34 @@
           input.setAttribute("aria-invalid", "true");
           feedback.textContent = message;
           feedback.classList.add("show");
+          feedback.hidden = false;
         } else {
           fieldWrap.classList.remove("invalid");
           input.setAttribute("aria-invalid", "false");
           feedback.textContent = "";
           feedback.classList.remove("show");
+          feedback.hidden = true;
         }
       }
 
       function validateField(fieldName) {
         const input = document.getElementById(fieldName);
-        const message = validators[fieldName](input.value);
+        if (!input) return true;
+
+        const message = validators[fieldName]
+          ? validators[fieldName](input.value)
+          : "";
         setFieldState(fieldName, message);
         return !message;
       }
 
       function validateForm() {
         return fieldNames.every((fieldName) => validateField(fieldName));
+      }
+
+      function hideGlobalError() {
+        errorBox.textContent = "";
+        errorBox.hidden = true;
       }
 
       function showError(message) {
@@ -456,7 +471,24 @@
           `;
           successMsg.style.display = "flex";
         }
-        errorBox.hidden = true;
+        hideGlobalError();
+      }
+
+      function mapApiErrorToField(result) {
+        const fields = result?.fields || {};
+        const message = String(result?.message || "");
+
+        if (fields.fullName) return { field: "fullName", message: fields.fullName };
+        if (fields.email) return { field: "email", message: fields.email };
+        if (fields.password) return { field: "passwordInput", message: fields.password };
+        if (fields.confirmPassword) return { field: "confirmPasswordInput", message: fields.confirmPassword };
+
+        if (/email/i.test(message)) return { field: "email", message };
+        if (/họ tên|full name|fullName/i.test(message)) return { field: "fullName", message };
+        if (/mật khẩu|password/i.test(message)) return { field: "passwordInput", message };
+        if (/xác nhận|confirm/i.test(message)) return { field: "confirmPasswordInput", message };
+
+        return null;
       }
 
       fieldNames.forEach((fieldName) => {
@@ -496,9 +528,12 @@
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
+        clearFieldErrors();
+        hideGlobalError();
+        if (successMsg) successMsg.style.display = "none";
+
         const isValid = validateForm();
         if (!isValid) {
-          showError("Vui lòng kiểm tra lại thông tin đăng ký.");
           return;
         }
 
@@ -531,18 +566,30 @@
           const result = await response.json();
 
           if (!response.ok) {
+            const mappedError = mapApiErrorToField(result);
+
+            if (mappedError) {
+              setFieldState(mappedError.field, mappedError.message);
+            }
+
             throw new Error(result.message || "Đăng ký thất bại.");
           }
 
           showSuccess(result.message || "Đăng ký thành công.");
           form.reset();
-          fieldNames.forEach((name) => setFieldState(name, ""));
+          clearFieldErrors();
 
           setTimeout(() => {
             window.location.href = "/login.html";
           }, 1200);
         } catch (error) {
-          showError(error.message || "Có lỗi xảy ra.");
+          const hasVisibleFieldError = Array.from(
+            document.querySelectorAll(".field-feedback.show"),
+          ).some((el) => el.textContent.trim());
+
+          if (!hasVisibleFieldError) {
+            // Không hiển thị thông báo chung dưới form.
+          }
         } finally {
           submitButton.disabled = false;
           submitButton.textContent = "Đăng ký";
