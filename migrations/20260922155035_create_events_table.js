@@ -1,4 +1,4 @@
-// Hướng chạy tiến: Tạo bảng events
+// Hướng chạy tiến: Tạo bảng events đời đầu (được migration Task 09 bảo toàn thành legacy_events).
 exports.up = function(knex) {
   return knex.schema.createTable('events', function(table) {
     table.increments('id').primary();
@@ -10,7 +10,6 @@ exports.up = function(knex) {
   });
 };
 
-// Hướng chạy lùi: Xóa bảng events nếu rollback
 exports.down = function(knex) {
   return knex.schema.dropTable('events');
 };
