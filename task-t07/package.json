@@ -1,20 +1,26 @@
 {
   "name": "task-t07-register-api",
-  "version": "1.0.0",
-  "description": "Register API and form implementation for task T-07",
+  "version": "1.1.0",
+  "description": "Secure authentication API and form implementation for task T-07",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [
     "register",
     "api",
-    "form"
+    "form",
+    "auth",
+    "security"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.19.2"
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.3.1",
+    "pg": "^8.12.0"
   }
 }

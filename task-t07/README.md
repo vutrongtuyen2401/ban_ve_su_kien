@@ -1,7 +1,9 @@
 # Task T-07: API và Form đăng ký kèm kiểm tra dữ liệu
 
 ## Mục tiêu
+
 Triển khai API đăng ký và form đăng ký theo yêu cầu chức năng:
+
 - email, password, fullName
 - validate email hợp lệ
 - password tối thiểu 8 ký tự
@@ -10,25 +12,31 @@ Triển khai API đăng ký và form đăng ký theo yêu cầu chức năng:
 - trạng thái tài khoản chưa kích hoạt
 
 ## Cấu trúc file
+
 - `server.js`: API backend
 - `public/register.html`: giao diện form đăng ký
 - `public/styles.css`: style để giữ UI thống nhất với form login
 - `package.json`: dependency và script chạy app
 
 ## Chạy ứng dụng
+
 ```bash
 npm install
 npm start
 ```
 
 Sau đó mở browser tại:
+
 ```text
-http://localhost:3000
+http://localhost:2006
 ```
 
 ## API dùng thử
+
 ### POST /api/auth/register
+
 Request body:
+
 ```json
 {
   "fullName": "Nguyễn Văn A",
@@ -38,6 +46,7 @@ Request body:
 ```
 
 Response thành công:
+
 ```json
 {
   "success": true,
@@ -54,5 +63,6 @@ Response thành công:
 ```
 
 ## Lưu ý
+
 - Khi email đã tồn tại, API trả về lỗi chung để không lộ thông tin chi tiết về dữ liệu đã tồn tại.
 - Dự án này là phiên bản demo phù hợp để tích hợp vào project thực tế hiện có.
