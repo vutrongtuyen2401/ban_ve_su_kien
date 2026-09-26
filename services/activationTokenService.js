@@ -13,7 +13,7 @@ function createActivationToken(now = new Date()) {
 
 function createActivationUrl(rawToken) {
   const baseUrl = (process.env.APP_BASE_URL || 'http://localhost:8090').replace(/\/$/, '');
-  return `${baseUrl}/api/auth/activate?token=${encodeURIComponent(rawToken)}`;
+  return `${baseUrl}/activate.html?token=${encodeURIComponent(rawToken)}`;
 }
 
 module.exports = { TOKEN_DURATION_MS, hashToken, createActivationToken, createActivationUrl };

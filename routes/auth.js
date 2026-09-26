@@ -38,9 +38,10 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không đúng.' });
     }
     if (!user.is_active) return res.status(403).json({ success: false, message: 'Tài khoản chưa được xác nhận qua email.' });
+    const roles = await db('roles').join('user_roles', 'roles.id', 'user_roles.role_id').where('user_roles.user_id', user.id).pluck('roles.name');
     const session = await createSession(user.id);
     setSessionCookie(res, session);
-    return res.json({ success: true, user: { id: user.id, email: user.email } });
+    return res.json({ success: true, user: { id: user.id, email: user.email, roles } });
   } catch (error) { return next(error); }
 });
 
