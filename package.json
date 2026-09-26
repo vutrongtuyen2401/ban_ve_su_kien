@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test --test-isolation=none test/task08Activation.test.js && node --test --test-isolation=none test/task10SeatHolds.test.js",
+    "start": "node index.js",
+    "setup:dev": "npm run migrate:latest && npm run seed:run",
+    "test": "node --test test/task08Activation.test.js && node --test test/task10SeatHolds.test.js",
     "migrate:latest": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "seed:run": "knex seed:run",

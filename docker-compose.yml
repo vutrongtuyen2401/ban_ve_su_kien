@@ -1,41 +1,38 @@
-version: '3.8'
-
 services:
-  # Dịch vụ ứng dụng Node.js
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sprint1_local_password
+      POSTGRES_DB: ban_ve_su_kien_sprint1
+    ports:
+      - "5433:5432"
+    volumes:
+      - sprint1_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ban_ve_su_kien_sprint1"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
   api:
     build: .
     ports:
       - "8090:8090"
     environment:
-      - DB_CONNECTION_STRING=postgres://postgres:mysecretpassword@db:5432/postgres
-      - PORT=8090
+      NODE_ENV: development
+      PORT: 8090
+      APP_BASE_URL: http://localhost:8090
+      DB_CONNECTION_STRING: postgresql://postgres:sprint1_local_password@db:5432/ban_ve_su_kien_sprint1
+      DEMO_ADMIN_EMAIL: admin@demo.local
+      DEMO_ADMIN_PASSWORD: AdminDemo123!
+      DEMO_ORGANIZER_EMAIL: organizer@demo.local
+      DEMO_ORGANIZER_PASSWORD: OrganizerDemo123!
     depends_on:
       db:
         condition: service_healthy
+    command: ["sh", "-c", "npm run migrate:latest && npm run seed:run && npm start"]
     restart: unless-stopped
 
-  # Dịch vụ Cơ sở dữ liệu PostgreSQL
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # Dịch vụ Cache Redis
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
 volumes:
-  postgres_data:
+  sprint1_postgres_data:
